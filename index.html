@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Compare - Beyond Compare Clone</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 40px; }
+    .container { display: flex; gap: 40px; max-width: 100vw; }
+    .file-area { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; }
+    .pane { width: 100%; height: 300px; margin-top: 10px; font-family: monospace; font-size: 14px; overflow: auto; white-space: pre; border: 1px solid #ccc; padding: 5px; box-sizing: border-box; }
+    .controls { margin: 20px 0; display: flex; gap: 10px; }
+    .highlight-diff { background: #ffe0e0; }
+    .highlight-same { background: #e0ffe0; }
+    .line { white-space: pre; }
+    /* logo sizing */
+    #logo { max-width: 200px; height: auto; display: block; margin-bottom: 20px; }
+  </style>
+</head>
+<body>
+  <!-- embedded compare icon as data URI -->
+  <!-- logo referencing external file -->
+  <img id="logo" src="compare.png" alt="logo" />
+  <div class="container">
+    <div class="file-area">
+      <label for="file1">File 1:</label>
+      <input type="file" id="file1" accept=".txt" />
+      <div id="text1" class="pane" contenteditable="true" placeholder="Paste or load file contents..."></div>
+    </div>
+    <div class="file-area">
+      <label for="file2">File 2:</label>
+      <input type="file" id="file2" accept=".txt" />
+      <div id="text2" class="pane" contenteditable="true" placeholder="Paste or load file contents..."></div>
+    </div>
+  </div>
+  <div class="controls">
+    <button id="showDiff">Highlight Differences</button>
+    <button id="showSame">Highlight Same</button>
+    <button id="clearHighlight">Clear Highlight</button>
+  </div>
+
+  <script>
+    function readFile(input, pane) {
+      input.addEventListener('change', function() {
+        const file = input.files[0];
+        if (file) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            pane.innerText = e.target.result;
+          };
+          reader.readAsText(file);
+        }
+      });
+    }
+
+    readFile(document.getElementById('file1'), document.getElementById('text1'));
+    readFile(document.getElementById('file2'), document.getElementById('text2'));
+
+    function getLines(id) {
+      return document.getElementById(id).innerText.split('\n');
+    }
+
+    function renderPanes(lines1, lines2, highlightFunc) {
+      const maxLen = Math.max(lines1.length, lines2.length);
+      let out1 = '';
+      let out2 = '';
+      for (let i = 0; i < maxLen; i++) {
+        const l1 = lines1[i] || '';
+        const l2 = lines2[i] || '';
+        out1 += `<div class="line ${highlightFunc(l1,l2, true)}">${l1}</div>`;
+        out2 += `<div class="line ${highlightFunc(l1,l2, false)}">${l2}</div>`;
+      }
+      document.getElementById('text1').innerHTML = out1;
+      document.getElementById('text2').innerHTML = out2;
+    }
+
+    function clearHighlights() {
+      const lines1 = getLines('text1');
+      const lines2 = getLines('text2');
+      renderPanes(lines1, lines2, ()=>'');
+    }
+
+    function highlightDiff() {
+      const lines1 = getLines('text1');
+      const lines2 = getLines('text2');
+      renderPanes(lines1, lines2, (l1,l2)=> l1!==l2 ? 'highlight-diff' : '');
+    }
+
+    function highlightSame() {
+      const lines1 = getLines('text1');
+      const lines2 = getLines('text2');
+      renderPanes(lines1, lines2, (l1,l2,isFirst)=> {
+        const same = l1===l2 && l1 !== '';
+        return same ? 'highlight-same' : '';
+      });
+    }
+
+    document.getElementById('showDiff').addEventListener('click', highlightDiff);
+    document.getElementById('showSame').addEventListener('click', highlightSame);
+    document.getElementById('clearHighlight').addEventListener('click', clearHighlights);
+
+    // make panes respond to typing by clearing highlights
+    document.getElementById('text1').addEventListener('input', clearHighlights);
+    document.getElementById('text2').addEventListener('input', clearHighlights);
+
+    // initial empty panes
+    clearHighlights();
+  </script>
+</body>
+</html>

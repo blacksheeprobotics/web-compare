@@ -1,0 +1,6 @@
+Line 1: The quick brown cat
+Line 2: jumps over the lazy dog
+Line 3: Same in both files
+Line 4: Different content here
+Line 5: Another line
+Line 6: Extra line in file2
